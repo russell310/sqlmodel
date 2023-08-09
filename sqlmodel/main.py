@@ -236,7 +236,6 @@ class SQLModelMetaclass(ModelMetaclass, DeclarativeMeta):
         class_dict: Dict[str, Any],
         **kwargs: Any,
     ) -> Any:
-
         relationships: Dict[str, RelationshipInfo] = {}
         dict_for_pydantic = {}
         original_annotations = class_dict.get("__annotations__", {})
@@ -569,7 +568,22 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         validated = super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
-        return cls(**{key: value for key, value in validated})
+
+        # remove defaults so they don't get validated
+        data = {}
+        for key, value in validated:
+            field = cls.model_fields[key]
+
+            if (
+                hasattr(field, "default")
+                and field.default is not PydanticUndefined
+                and value == field.default
+            ):
+                continue
+
+            data[key] = value
+
+        return cls(**data)
 
 
 def _is_field_noneable(field: FieldInfo) -> bool:

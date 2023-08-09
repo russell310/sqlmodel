@@ -3,7 +3,7 @@ from sqlmodel import create_engine
 from sqlmodel.pool import StaticPool
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "FastAPI", "version": "0.1.0"},
     "paths": {
         "/heroes/": {
@@ -182,7 +182,10 @@ openapi_schema = {
                 "properties": {
                     "name": {"title": "Name", "type": "string"},
                     "secret_name": {"title": "Secret Name", "type": "string"},
-                    "age": {"title": "Age", "type": "integer"},
+                    "age": {
+                        "title": "Age",
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                    },
                 },
             },
             "HeroRead": {
@@ -192,7 +195,10 @@ openapi_schema = {
                 "properties": {
                     "name": {"title": "Name", "type": "string"},
                     "secret_name": {"title": "Secret Name", "type": "string"},
-                    "age": {"title": "Age", "type": "integer"},
+                    "age": {
+                        "title": "Age",
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                    },
                     "id": {"title": "Id", "type": "integer"},
                 },
             },
@@ -200,9 +206,18 @@ openapi_schema = {
                 "title": "HeroUpdate",
                 "type": "object",
                 "properties": {
-                    "name": {"title": "Name", "type": "string"},
-                    "secret_name": {"title": "Secret Name", "type": "string"},
-                    "age": {"title": "Age", "type": "integer"},
+                    "name": {
+                        "title": "Name",
+                        "anyOf": [{"type": "string"}, {"type": "null"}],
+                    },
+                    "secret_name": {
+                        "title": "Secret Name",
+                        "anyOf": [{"type": "string"}, {"type": "null"}],
+                    },
+                    "age": {
+                        "title": "Age",
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                    },
                 },
             },
             "ValidationError": {
@@ -213,7 +228,9 @@ openapi_schema = {
                     "loc": {
                         "title": "Location",
                         "type": "array",
-                        "items": {"type": "string"},
+                        "items": {
+                            "anyOf": [{"type": "string"}, {"type": "integer"}],
+                        },
                     },
                     "msg": {"title": "Message", "type": "string"},
                     "type": {"title": "Error Type", "type": "string"},
@@ -233,7 +250,6 @@ def test_tutorial(clear_sqlmodel):
     )
 
     with TestClient(mod.app) as client:
-
         hero1_data = {"name": "Deadpond", "secret_name": "Dive Wilson"}
         hero2_data = {
             "name": "Spider-Boy",

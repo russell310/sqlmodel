@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlmodel.default import Default
 
 
@@ -9,7 +11,7 @@ def test_default_bool() -> None:
     df1 = Default(False)
     df2 = Default(0)
     df3 = Default("")
-    df4: list = Default([])
+    df4: list[Any] = Default([])
     df5 = Default(None)
 
     assert not not dt1
