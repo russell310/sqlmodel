@@ -61,6 +61,9 @@ def __dataclass_transform__(
 
 
 class FieldInfo(PydanticFieldInfo):
+
+    nullable: Union[bool, PydanticUndefinedType]
+
     def __init__(self, default: Any = PydanticUndefined, **kwargs: Any) -> None:
         primary_key = kwargs.pop("primary_key", False)
         nullable = kwargs.pop("nullable", PydanticUndefined)
@@ -587,7 +590,7 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
 
 
 def _is_field_noneable(field: FieldInfo) -> bool:
-    if getattr(field, "nullable", PydanticUndefined) is not PydanticUndefined:
+    if not isinstance(field.nullable, PydanticUndefinedType):
         return field.nullable
     if not field.is_required():
         default = getattr(field, "original_default", field.default)

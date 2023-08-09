@@ -1,9 +1,11 @@
-from typing import Any, Mapping, Optional, Sequence, TypeVar, Union
+from typing import Any, Dict, Mapping, Optional, Sequence, Type, TypeVar, Union
 
 from sqlalchemy import util
 from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 from sqlalchemy.ext.asyncio import engine
 from sqlalchemy.ext.asyncio.engine import AsyncConnection, AsyncEngine
+from sqlalchemy.orm import Mapper
+from sqlalchemy.sql.expression import TableClause
 from sqlalchemy.util.concurrency import greenlet_spawn
 from sqlmodel.sql.base import Executable
 
@@ -14,13 +16,18 @@ from ...sql.expression import Select
 _T = TypeVar("_T")
 
 
+BindsType = Dict[
+    Union[Type[Any], Mapper[Any], TableClause, str], Union[AsyncEngine, AsyncConnection]
+]
+
+
 class AsyncSession(_AsyncSession):
     sync_session: Session
 
     def __init__(
         self,
         bind: Optional[Union[AsyncConnection, AsyncEngine]] = None,
-        binds: Optional[Mapping[object, Union[AsyncConnection, AsyncEngine]]] = None,
+        binds: Optional[BindsType] = None,
         **kw: Any,
     ):
         # All the same code of the original AsyncSession
