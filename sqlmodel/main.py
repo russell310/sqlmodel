@@ -52,9 +52,14 @@ from .sql.sqltypes import GUID, AutoString
 from .typing import SQLModelConfig
 
 if sys.version_info >= (3, 8):
-    from typing import get_args, get_origin, Annotated
+    from typing import get_args, get_origin
 else:
-    from typing_extensions import get_args, get_origin, Annotated
+    from typing_extensions import get_args, get_origin
+    
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+else:
+    from typing_extensions import Annotated
 
 _T = TypeVar("_T")
 NoArgAnyCallable = Callable[[], Any]
@@ -437,7 +442,12 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
     type_: Optional[type] = field.annotation
 
     # Resolve Optional/Union fields
-    if type_ is not None and get_origin(type_) in (types.UnionType, Union):
+    def is_optional_or_union(type_):
+        if sys.version_info >= (3, 10):
+            return get_origin(type_) in (types.UnionType, Union)
+        else:
+            return get_origin(type_) is Union
+    if type_ is not None and is_optional_or_union(type_):
         bases = get_args(type_)
         if len(bases) > 2:
             raise RuntimeError(
