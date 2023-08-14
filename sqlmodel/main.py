@@ -442,7 +442,7 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
     type_: Optional[type] = field.annotation
 
     # Resolve Optional/Union fields
-    def is_optional_or_union(type_):
+    def is_optional_or_union(type_: Optional[type]) -> bool:
         if sys.version_info >= (3, 10):
             return get_origin(type_) in (types.UnionType, Union)
         else:
