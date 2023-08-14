@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import sys
+import types
 import uuid
 import weakref
 from datetime import date, datetime, time, timedelta
@@ -26,7 +27,6 @@ from typing import (
     Union,
     cast,
 )
-import types
 
 import pydantic
 from pydantic import BaseModel
@@ -43,10 +43,9 @@ from sqlalchemy.orm.attributes import set_attribute
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.instrumentation import is_instrumented
 from sqlalchemy.orm.properties import MappedColumn
-from sqlalchemy.sql.schema import MetaData, DefaultClause
-from sqlalchemy.sql.sqltypes import LargeBinary, Time
 from sqlalchemy.sql import false, true
-
+from sqlalchemy.sql.schema import DefaultClause, MetaData
+from sqlalchemy.sql.sqltypes import LargeBinary, Time
 
 from .sql.sqltypes import GUID, AutoString
 from .typing import SQLModelConfig
