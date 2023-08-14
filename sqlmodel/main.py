@@ -24,8 +24,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
-    get_args
+    cast
 )
 import types
 
@@ -46,6 +45,8 @@ from sqlalchemy.orm.instrumentation import is_instrumented
 from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.sql.schema import MetaData, DefaultClause
 from sqlalchemy.sql.sqltypes import LargeBinary, Time
+from sqlalchemy.sql import false, true
+
 
 from .sql.sqltypes import GUID, AutoString
 from .typing import SQLModelConfig
@@ -179,8 +180,19 @@ def Field(
         #server_default -> default
         if isinstance(sa_column_, Column) and isinstance(sa_column_.server_default, DefaultClause):
             default_value =  sa_column_.server_default.arg
-            if issubclass( type(sa_column_.type), Integer):
+            if issubclass( type(sa_column_.type), Integer) and isinstance(default_value, str):
                 default = int(default_value)
+            elif issubclass( type(sa_column_.type), Boolean):
+                if default_value is false():
+                    default = False
+                elif default_value is true():
+                    default = True
+                elif isinstance(default_value, str):
+                    if default_value == '1':
+                        default =True
+                    elif default_value == '0':
+                        default = False
+                    
 
     field_info = FieldInfo(
         default,
