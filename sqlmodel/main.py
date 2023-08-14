@@ -177,7 +177,7 @@ def Field(
 ) -> Any:
     current_schema_extra = schema_extra or {}
     if default is PydanticUndefined:
-        if type(sa_column) is types.FunctionType: #lambda 
+        if isinstance(sa_column, types.FunctionType): #lambda 
             sa_column_ = sa_column()
         else:
             sa_column_ = sa_column
