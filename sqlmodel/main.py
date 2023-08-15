@@ -524,6 +524,8 @@ def get_column_from_field(field: FieldInfo) -> Column:  # type: ignore
         return sa_column
     if isinstance(sa_column, MappedColumn):
         return sa_column.column
+    if isinstance(sa_column, types.FunctionType):
+        return sa_column()
     sa_type = get_sqlalchemy_type(field)
     primary_key = getattr(field, "primary_key", False)
     index = getattr(field, "index", PydanticUndefined)
