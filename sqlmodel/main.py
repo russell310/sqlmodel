@@ -167,7 +167,7 @@ def Field(
     unique: bool = False,
     nullable: Union[bool, PydanticUndefinedType] = PydanticUndefined,
     index: Union[bool, PydanticUndefinedType] = PydanticUndefined,
-    sa_column: Union[Column, PydanticUndefinedType, types.FunctionType] = PydanticUndefined,  # type: ignore
+    sa_column: Union[Column, PydanticUndefinedType, Callable[[], Column]] = PydanticUndefined,  # type: ignore
     sa_column_args: Union[Sequence[Any], PydanticUndefinedType] = PydanticUndefined,
     sa_column_kwargs: Union[
         Mapping[str, Any], PydanticUndefinedType
@@ -525,7 +525,9 @@ def get_column_from_field(field: FieldInfo) -> Column:  # type: ignore
     if isinstance(sa_column, MappedColumn):
         return sa_column.column
     if isinstance(sa_column, types.FunctionType):
-        return sa_column()
+        col = sa_column()
+        assert isinstance(col, Column)
+        return col
     sa_type = get_sqlalchemy_type(field)
     primary_key = getattr(field, "primary_key", False)
     index = getattr(field, "index", PydanticUndefined)
