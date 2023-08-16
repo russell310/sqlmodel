@@ -666,9 +666,7 @@ def _is_field_noneable(field: FieldInfo) -> bool:
         return field.nullable
     if not field.is_required():
         default = getattr(field, "original_default", field.default)
-        if default is None:
-            return True
-        elif default is PydanticUndefined:
+        if default is PydanticUndefined:
             return False
         if field.annotation is None or field.annotation is NoneType:
             return True
