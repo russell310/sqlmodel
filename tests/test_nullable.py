@@ -1,11 +1,14 @@
 from typing import Optional
 
 import pytest
+from pydantic import AnyUrl, UrlConstraints
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, create_engine
 from typing_extensions import Annotated
-from pydantic import AnyUrl, UrlConstraints
-MoveSharedUrl =  Annotated[AnyUrl, UrlConstraints(max_length=512, allowed_schemes=['smb', 'ftp','file'])]
+
+MoveSharedUrl = Annotated[
+    AnyUrl, UrlConstraints(max_length=512, allowed_schemes=["smb", "ftp", "file"])
+]
 
 
 def test_nullable_fields(clear_sqlmodel, caplog):
