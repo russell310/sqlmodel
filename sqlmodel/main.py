@@ -525,23 +525,14 @@ def get_column_from_field(field: FieldInfo) -> Column:  # type: ignore
     sa_column > field attributes > annotation info
     """
     sa_column = getattr(field, "sa_column", PydanticUndefined)
-    col: Column | None = None
     if isinstance(sa_column, Column):
-        col = sa_column
-    elif isinstance(sa_column, MappedColumn):
-        col = sa_column.column
-    elif isinstance(sa_column, types.FunctionType):
+        return sa_column
+    if isinstance(sa_column, MappedColumn):
+        return sa_column.column
+    if isinstance(sa_column, types.FunctionType):
         col = sa_column()
-    if isinstance(col, Column):
-        # field attribute or field annotation -> Column.nullable
-        if col.nullable is PydanticUndefined:
-            col.nullable = _is_field_noneable(field)
-        # field.primary_key -> Column.primary_key
-        if col.primary_key is PydanticUndefined:
-            primary_key = getattr(field, "primary_key", False)
-            col.primary_key = primary_key
+        assert isinstance(col, Column)
         return col
-
     sa_type = get_sqlalchemy_type(field)
     primary_key = getattr(field, "primary_key", False)
     index = getattr(field, "index", PydanticUndefined)
