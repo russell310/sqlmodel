@@ -3,6 +3,9 @@ from typing import Optional
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, create_engine
+from typing_extensions import Annotated
+from pydantic import AnyUrl, UrlConstraints
+MoveSharedUrl =  Annotated[AnyUrl, UrlConstraints(max_length=512, allowed_schemes=['smb', 'ftp','file'])]
 
 
 def test_nullable_fields(clear_sqlmodel, caplog):
@@ -49,6 +52,7 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         str_default_str_nullable: str = Field(default="default", nullable=True)
         str_default_ellipsis_non_nullable: str = Field(default=..., nullable=False)
         str_default_ellipsis_nullable: str = Field(default=..., nullable=True)
+        annotated_any_url: MoveSharedUrl | None = Field(description="")
 
     engine = create_engine("sqlite://", echo=True)
     SQLModel.metadata.create_all(engine)
@@ -77,6 +81,7 @@ def test_nullable_fields(clear_sqlmodel, caplog):
     assert "str_default_str_nullable VARCHAR," in create_table_log
     assert "str_default_ellipsis_non_nullable VARCHAR NOT NULL," in create_table_log
     assert "str_default_ellipsis_nullable VARCHAR," in create_table_log
+    assert "annotated_any_url  VARCHAR(512)," in create_table_log
 
 
 # Test for regression in https://github.com/tiangolo/sqlmodel/issues/420
