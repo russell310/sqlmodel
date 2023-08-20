@@ -20,7 +20,7 @@ MoveSharedUrl = Annotated[
 ]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10))
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="requires python3.10 or higher")
 def test_field_resuse():
     class BasicFileLog(SQLModel):
         resourceID: int = Field(
