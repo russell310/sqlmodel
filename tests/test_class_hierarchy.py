@@ -3,8 +3,6 @@ import sys
 
 import pytest
 from pydantic import AnyUrl, UrlConstraints
-from typing_extensions import Annotated
-
 from sqlmodel import (
     BigInteger,
     Column,
@@ -15,6 +13,7 @@ from sqlmodel import (
     String,
     create_engine,
 )
+from typing_extensions import Annotated
 
 MoveSharedUrl = Annotated[
     AnyUrl, UrlConstraints(max_length=512, allowed_schemes=["smb", "ftp", "file"])
