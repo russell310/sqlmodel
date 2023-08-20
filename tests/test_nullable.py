@@ -88,7 +88,7 @@ def test_nullable_fields(clear_sqlmodel, caplog):
     assert "str_default_str_nullable VARCHAR," in create_table_log
     assert "str_default_ellipsis_non_nullable VARCHAR NOT NULL," in create_table_log
     assert "str_default_ellipsis_nullable VARCHAR," in create_table_log
-    assert "annotated_any_url  VARCHAR(512)," in create_table_log
+    assert "annotated_any_url VARCHAR(512) NOT NULL" in create_table_log
 
 
 # Test for regression in https://github.com/tiangolo/sqlmodel/issues/420
