@@ -19,6 +19,8 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         )
         required_value: str
         optional_default_ellipsis: Optional[str] = Field(default=...)
+        optional_no_field: Optional[str]
+        optional_no_field_default: Optional[str] = Field(description="no default")
         optional_default_none: Optional[str] = Field(default=None)
         optional_non_nullable: Optional[str] = Field(
             nullable=False,
@@ -55,7 +57,7 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         str_default_str_nullable: str = Field(default="default", nullable=True)
         str_default_ellipsis_non_nullable: str = Field(default=..., nullable=False)
         str_default_ellipsis_nullable: str = Field(default=..., nullable=True)
-        annotated_any_url: MoveSharedUrl | None = Field(description="")
+        annotated_any_url: Optional[MoveSharedUrl] = Field(description="")
 
     engine = create_engine("sqlite://", echo=True)
     SQLModel.metadata.create_all(engine)
@@ -66,6 +68,8 @@ def test_nullable_fields(clear_sqlmodel, caplog):
     assert "primary_key INTEGER NOT NULL," in create_table_log
     assert "required_value VARCHAR NOT NULL," in create_table_log
     assert "optional_default_ellipsis VARCHAR NOT NULL," in create_table_log
+    assert "optional_no_field VARCHAR," in create_table_log
+    assert "optional_no_field_default VARCHAR NOT NULL," in create_table_log
     assert "optional_default_none VARCHAR," in create_table_log
     assert "optional_non_nullable VARCHAR NOT NULL," in create_table_log
     assert "optional_nullable VARCHAR," in create_table_log
