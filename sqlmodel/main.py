@@ -666,14 +666,15 @@ def _is_field_noneable(field: FieldInfo) -> bool:
         return field.nullable
     if not field.is_required():
         default = getattr(field, "original_default", field.default)
+        if default is PydanticUndefined:
+            return False
         if field.annotation is None or field.annotation is NoneType:
             return True
         if _is_optional_or_union(field.annotation):
             for base in get_args(field.annotation):
                 if base is NoneType:
                     return True
-        if default is PydanticUndefined:
-            return False
+
         return False
     return False
 
