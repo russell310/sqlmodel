@@ -649,7 +649,10 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         # remove defaults so they don't get validated
         data = {}
         for key, value in validated:
-            field = cls.model_fields[key]
+            field = cls.model_fields.get(key)
+
+            if field is None:
+                continue
 
             if (
                 hasattr(field, "default")
