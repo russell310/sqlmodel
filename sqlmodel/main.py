@@ -58,7 +58,7 @@ else:
 if sys.version_info >= (3, 9):
     from typing import Annotated
 else:
-    from typing_extensions import Annotated
+    from typing_extensions import Annotated, _AnnotatedAlias
 
 _T = TypeVar("_T")
 NoArgAnyCallable = Callable[[], Any]
