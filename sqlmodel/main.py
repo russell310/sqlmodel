@@ -467,11 +467,14 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
         meta = field.metadata[0]
         return AutoString(length=meta.max_length)
 
-    if get_origin(type_) is Annotated:
+    org_type = get_origin(type_)
+    if org_type is Annotated:
         type2 = get_args(type_)[0]
         if type2 is pydantic.AnyUrl:
             meta = get_args(type_)[1]
             return AutoString(length=meta.max_length)
+    elif org_type is pydantic.AnyUrl:
+        return AutoString(type_.__metadata__[0].max_length)
 
     # The 3rd is PydanticGeneralMetadata
     metadata = _get_field_metadata(field)
