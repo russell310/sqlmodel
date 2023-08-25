@@ -1,8 +1,5 @@
 from typing import Optional
 
-import pytest
-from pydantic import field_validator
-from pydantic.error_wrappers import ValidationError
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 
