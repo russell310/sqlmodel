@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 from pydantic import field_validator
 from pydantic.error_wrappers import ValidationError
-from sqlmodel import SQLModel, create_engine, Session, Field
+from sqlmodel import Field, Session, SQLModel, create_engine
 
 
 def test_model_copy(clear_sqlmodel):
@@ -36,14 +36,18 @@ def test_model_copy(clear_sqlmodel):
 
     model_copy = hero.model_copy(update={"name": "Deadpond Copy"})
 
-    assert model_copy.name == "Deadpond Copy" and \
-           model_copy.secret_name == "Dive Wilson" and \
-           model_copy.age == 25
+    assert (
+        model_copy.name == "Deadpond Copy"
+        and model_copy.secret_name == "Dive Wilson"
+        and model_copy.age == 25
+    )
 
     db_hero = session.get(Hero, hero.id)
 
     db_copy = db_hero.model_copy(update={"name": "Deadpond Copy"})
 
-    assert db_copy.name == "Deadpond Copy" and \
-           db_copy.secret_name == "Dive Wilson" and \
-           db_copy.age == 25
+    assert (
+        db_copy.name == "Deadpond Copy"
+        and db_copy.secret_name == "Dive Wilson"
+        and db_copy.age == 25
+    )
