@@ -461,8 +461,11 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
     # UrlConstraints(max_length=512,
     # allowed_schemes=['smb', 'ftp', 'file']) ]
     if type_ is pydantic.AnyUrl:
-        meta = field.metadata[0]
-        return AutoString(length=meta.max_length)
+        if field.metadata:
+            meta = field.metadata[0]
+            return AutoString(length=meta.max_length)
+        else:
+            return AutoString
 
     org_type = get_origin(type_)
     if org_type is Annotated:
