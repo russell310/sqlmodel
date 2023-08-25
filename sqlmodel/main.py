@@ -596,6 +596,10 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         # in the Pydantic model so that when SQLAlchemy sets attributes that are
         # added (e.g. when querying from DB) to the __fields_set__, this already exists
         object.__setattr__(new_object, "__pydantic_fields_set__", set())
+        if not hasattr(new_object, "__pydantic_extra__"):
+            object.__setattr__(new_object, "__pydantic_extra__", None)
+        if not hasattr(new_object, "__pydantic_private__"):
+            object.__setattr__(new_object, "__pydantic_private__", None)
         return new_object
 
     def __init__(__pydantic_self__, **data: Any) -> None:
@@ -645,7 +649,10 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         # remove defaults so they don't get validated
         data = {}
         for key, value in validated:
-            field = cls.model_fields[key]
+            field = cls.model_fields.get(key)
+
+            if field is None:
+                continue
 
             if (
                 hasattr(field, "default")
