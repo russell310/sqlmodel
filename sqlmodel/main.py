@@ -56,7 +56,7 @@ else:
     from typing_extensions import get_args, get_origin
 
 if sys.version_info >= (3, 9):
-    from typing import Annotated
+    from typing import Annotated, _AnnotatedAlias
 else:
     from typing_extensions import Annotated, _AnnotatedAlias
 
