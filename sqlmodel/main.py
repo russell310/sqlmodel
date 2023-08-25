@@ -448,7 +448,7 @@ def _is_optional_or_union(type_: Optional[type]) -> bool:
 
 
 def get_sqlalchemy_type(field: FieldInfo) -> Any:
-    type_: Optional[type] = field.annotation
+    type_: Optional[type] | _AnnotatedAlias = field.annotation
 
     # Resolve Optional/Union fields
 
@@ -473,7 +473,7 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
         if type2 is pydantic.AnyUrl:
             meta = get_args(type_)[1]
             return AutoString(length=meta.max_length)
-    elif org_type is pydantic.AnyUrl:
+    elif org_type is pydantic.AnyUrl and type(type_) is _AnnotatedAlias:
         return AutoString(type_.__metadata__[0].max_length)
 
     # The 3rd is PydanticGeneralMetadata
