@@ -55,10 +55,7 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import get_args, get_origin
 
-if sys.version_info >= (3, 9):
-    from typing import Annotated
-else:
-    from typing_extensions import Annotated
+from typing_extensions import Annotated, _AnnotatedAlias
 
 _T = TypeVar("_T")
 NoArgAnyCallable = Callable[[], Any]
@@ -167,7 +164,7 @@ def Field(
     unique: bool = False,
     nullable: Union[bool, PydanticUndefinedType] = PydanticUndefined,
     index: Union[bool, PydanticUndefinedType] = PydanticUndefined,
-    sa_column: Union[Column, PydanticUndefinedType, types.FunctionType] = PydanticUndefined,  # type: ignore
+    sa_column: Union[Column, PydanticUndefinedType, Callable[[], Column]] = PydanticUndefined,  # type: ignore
     sa_column_args: Union[Sequence[Any], PydanticUndefinedType] = PydanticUndefined,
     sa_column_kwargs: Union[
         Mapping[str, Any], PydanticUndefinedType
@@ -440,17 +437,19 @@ class SQLModelMetaclass(ModelMetaclass, DeclarativeMeta):
             ModelMetaclass.__init__(cls, classname, bases, dict_, **kw)
 
 
+def _is_optional_or_union(type_: Optional[type]) -> bool:
+    if sys.version_info >= (3, 10):
+        return get_origin(type_) in (types.UnionType, Union)
+    else:
+        return get_origin(type_) is Union
+
+
 def get_sqlalchemy_type(field: FieldInfo) -> Any:
-    type_: Optional[type] = field.annotation
+    type_: Optional[type] | _AnnotatedAlias = field.annotation
 
     # Resolve Optional/Union fields
-    def is_optional_or_union(type_: Optional[type]) -> bool:
-        if sys.version_info >= (3, 10):
-            return get_origin(type_) in (types.UnionType, Union)
-        else:
-            return get_origin(type_) is Union
 
-    if type_ is not None and is_optional_or_union(type_):
+    if type_ is not None and _is_optional_or_union(type_):
         bases = get_args(type_)
         if len(bases) > 2:
             raise RuntimeError(
@@ -462,14 +461,20 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
     # UrlConstraints(max_length=512,
     # allowed_schemes=['smb', 'ftp', 'file']) ]
     if type_ is pydantic.AnyUrl:
-        meta = field.metadata[0]
-        return AutoString(length=meta.max_length)
+        if field.metadata:
+            meta = field.metadata[0]
+            return AutoString(length=meta.max_length)
+        else:
+            return AutoString
 
-    if get_origin(type_) is Annotated:
+    org_type = get_origin(type_)
+    if org_type is Annotated:
         type2 = get_args(type_)[0]
         if type2 is pydantic.AnyUrl:
             meta = get_args(type_)[1]
             return AutoString(length=meta.max_length)
+    elif org_type is pydantic.AnyUrl and type(type_) is _AnnotatedAlias:
+        return AutoString(type_.__metadata__[0].max_length)
 
     # The 3rd is PydanticGeneralMetadata
     metadata = _get_field_metadata(field)
@@ -519,11 +524,18 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
 
 
 def get_column_from_field(field: FieldInfo) -> Column:  # type: ignore
+    """
+    sa_column > field attributes > annotation info
+    """
     sa_column = getattr(field, "sa_column", PydanticUndefined)
     if isinstance(sa_column, Column):
         return sa_column
     if isinstance(sa_column, MappedColumn):
         return sa_column.column
+    if isinstance(sa_column, types.FunctionType):
+        col = sa_column()
+        assert isinstance(col, Column)
+        return col
     sa_type = get_sqlalchemy_type(field)
     primary_key = getattr(field, "primary_key", False)
     index = getattr(field, "index", PydanticUndefined)
@@ -587,6 +599,10 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         # in the Pydantic model so that when SQLAlchemy sets attributes that are
         # added (e.g. when querying from DB) to the __fields_set__, this already exists
         object.__setattr__(new_object, "__pydantic_fields_set__", set())
+        if not hasattr(new_object, "__pydantic_extra__"):
+            object.__setattr__(new_object, "__pydantic_extra__", None)
+        if not hasattr(new_object, "__pydantic_private__"):
+            object.__setattr__(new_object, "__pydantic_private__", None)
         return new_object
 
     def __init__(__pydantic_self__, **data: Any) -> None:
@@ -636,7 +652,10 @@ class SQLModel(BaseModel, metaclass=SQLModelMetaclass, registry=default_registry
         # remove defaults so they don't get validated
         data = {}
         for key, value in validated:
-            field = cls.model_fields[key]
+            field = cls.model_fields.get(key)
+
+            if field is None:
+                continue
 
             if (
                 hasattr(field, "default")
@@ -661,10 +680,11 @@ def _is_field_noneable(field: FieldInfo) -> bool:
             return False
         if field.annotation is None or field.annotation is NoneType:
             return True
-        if get_origin(field.annotation) is Union:
+        if _is_optional_or_union(field.annotation):
             for base in get_args(field.annotation):
                 if base is NoneType:
                     return True
+
         return False
     return False
 
