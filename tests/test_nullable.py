@@ -57,7 +57,7 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         str_default_str_nullable: str = Field(default="default", nullable=True)
         str_default_ellipsis_non_nullable: str = Field(default=..., nullable=False)
         str_default_ellipsis_nullable: str = Field(default=..., nullable=True)
-        base_url : AnyUrl
+        base_url: AnyUrl
         optional_url: Optional[MoveSharedUrl] = Field(default=None, description="")
         url: MoveSharedUrl
         annotated_url: Annotated[MoveSharedUrl, Field(description="")]
