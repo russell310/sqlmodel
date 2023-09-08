@@ -29,7 +29,8 @@ from typing import (
 )
 
 import pydantic
-from pydantic import BaseModel
+from annotated_types import MaxLen
+from pydantic import BaseModel, EmailStr, ImportString, NameEmail
 from pydantic._internal._fields import PydanticGeneralMetadata
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic._internal._repr import Representation
@@ -480,7 +481,7 @@ def get_sqlalchemy_type(field: FieldInfo) -> Any:
     metadata = _get_field_metadata(field)
     if type_ is None:
         raise ValueError("Missing field type")
-    if issubclass(type_, str):
+    if issubclass(type_, str) or type_ in (EmailStr, NameEmail, ImportString):
         max_length = getattr(metadata, "max_length", None)
         if max_length:
             return AutoString(length=max_length)
@@ -692,5 +693,7 @@ def _is_field_noneable(field: FieldInfo) -> bool:
 def _get_field_metadata(field: FieldInfo) -> object:
     for meta in field.metadata:
         if isinstance(meta, PydanticGeneralMetadata):
+            return meta
+        if isinstance(meta, MaxLen):
             return meta
     return object()
