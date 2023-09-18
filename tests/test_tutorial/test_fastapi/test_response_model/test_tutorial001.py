@@ -3,7 +3,7 @@ from sqlmodel import create_engine
 from sqlmodel.pool import StaticPool
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "FastAPI", "version": "0.1.0"},
     "paths": {
         "/heroes/": {
@@ -74,13 +74,18 @@ openapi_schema = {
             },
             "Hero": {
                 "title": "Hero",
-                "required": ["name", "secret_name"],
                 "type": "object",
                 "properties": {
-                    "id": {"title": "Id", "type": "integer"},
+                    "id": {
+                        "title": "Id",
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                    },
                     "name": {"title": "Name", "type": "string"},
                     "secret_name": {"title": "Secret Name", "type": "string"},
-                    "age": {"title": "Age", "type": "integer"},
+                    "age": {
+                        "title": "Age",
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                    },
                 },
             },
             "ValidationError": {
@@ -91,7 +96,9 @@ openapi_schema = {
                     "loc": {
                         "title": "Location",
                         "type": "array",
-                        "items": {"type": "string"},
+                        "items": {
+                            "anyOf": [{"type": "string"}, {"type": "integer"}],
+                        },
                     },
                     "msg": {"title": "Message", "type": "string"},
                     "type": {"title": "Error Type", "type": "string"},
@@ -111,7 +118,6 @@ def test_tutorial(clear_sqlmodel):
     )
 
     with TestClient(mod.app) as client:
-
         hero_data = {"name": "Deadpond", "secret_name": "Dive Wilson"}
         response = client.post("/heroes/", json=hero_data)
         data = response.json()

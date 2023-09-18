@@ -12,9 +12,7 @@ from typing import (
 
 from sqlalchemy import util
 from sqlalchemy.orm import Mapper as _Mapper
-from sqlalchemy.orm import Query as _Query
 from sqlalchemy.orm import Session as _Session
-from sqlalchemy.sql.base import Executable as _Executable
 from sqlalchemy.sql.selectable import ForUpdateArg as _ForUpdateArg
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
@@ -81,56 +79,6 @@ class Session(_Session):
             return results.scalars()  # type: ignore
         return results  # type: ignore
 
-    def execute(
-        self,
-        statement: _Executable,
-        params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
-        execution_options: Mapping[str, Any] = util.EMPTY_DICT,
-        bind_arguments: Optional[Dict[str, Any]] = None,
-        _parent_execute_state: Optional[Any] = None,
-        _add_event: Optional[Any] = None,
-        **kw: Any,
-    ) -> Result[Any]:
-        """
-        🚨 You probably want to use `session.exec()` instead of `session.execute()`.
-
-        This is the original SQLAlchemy `session.execute()` method that returns objects
-        of type `Row`, and that you have to call `scalars()` to get the model objects.
-
-        For example:
-
-        ```Python
-        heroes = session.execute(select(Hero)).scalars().all()
-        ```
-
-        instead you could use `exec()`:
-
-        ```Python
-        heroes = session.exec(select(Hero)).all()
-        ```
-        """
-        return super().execute(  # type: ignore
-            statement,
-            params=params,
-            execution_options=execution_options,
-            bind_arguments=bind_arguments,
-            _parent_execute_state=_parent_execute_state,
-            _add_event=_add_event,
-            **kw,
-        )
-
-    def query(self, *entities: Any, **kwargs: Any) -> "_Query[Any]":
-        """
-        🚨 You probably want to use `session.exec()` instead of `session.query()`.
-
-        `session.exec()` is SQLModel's own short version with increased type
-        annotations.
-
-        Or otherwise you might want to use `session.execute()` instead of
-        `session.query()`.
-        """
-        return super().query(*entities, **kwargs)  # type: ignore
-
     def get(
         self,
         entity: Union[Type[_TSelectParam], "_Mapper[_TSelectParam]"],
@@ -152,3 +100,34 @@ class Session(_Session):
             execution_options=execution_options,
             bind_arguments=bind_arguments,
         )
+
+
+Session.query.__doc__ = """
+🚨 You probably want to use `session.exec()` instead of `session.query()`.
+
+`session.exec()` is SQLModel's own short version with increased type
+annotations.
+
+Or otherwise you might want to use `session.execute()` instead of
+`session.query()`.
+"""
+
+
+Session.execute.__doc__ = """
+🚨 You probably want to use `session.exec()` instead of `session.execute()`.
+
+This is the original SQLAlchemy `session.execute()` method that returns objects
+of type `Row`, and that you have to call `scalars()` to get the model objects.
+
+For example:
+
+```Python
+heroes = session.execute(select(Hero)).scalars().all()
+```
+
+instead you could use `exec()`:
+
+```Python
+heroes = session.exec(select(Hero)).all()
+```
+"""

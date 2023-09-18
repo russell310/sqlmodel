@@ -1,8 +1,14 @@
 from typing import Optional
 
 import pytest
+from pydantic import AnyUrl, UrlConstraints
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, create_engine
+from typing_extensions import Annotated
+
+MoveSharedUrl = Annotated[
+    AnyUrl, UrlConstraints(max_length=512, allowed_schemes=["smb", "ftp", "file"])
+]
 
 
 def test_nullable_fields(clear_sqlmodel, caplog):
@@ -13,6 +19,8 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         )
         required_value: str
         optional_default_ellipsis: Optional[str] = Field(default=...)
+        optional_no_field: Optional[str]
+        optional_no_field_default: Optional[str] = Field(description="no default")
         optional_default_none: Optional[str] = Field(default=None)
         optional_non_nullable: Optional[str] = Field(
             nullable=False,
@@ -49,6 +57,13 @@ def test_nullable_fields(clear_sqlmodel, caplog):
         str_default_str_nullable: str = Field(default="default", nullable=True)
         str_default_ellipsis_non_nullable: str = Field(default=..., nullable=False)
         str_default_ellipsis_nullable: str = Field(default=..., nullable=True)
+        base_url: AnyUrl
+        optional_url: Optional[MoveSharedUrl] = Field(default=None, description="")
+        url: MoveSharedUrl
+        annotated_url: Annotated[MoveSharedUrl, Field(description="")]
+        annotated_optional_url: Annotated[
+            Optional[MoveSharedUrl], Field(description="")
+        ] = None
 
     engine = create_engine("sqlite://", echo=True)
     SQLModel.metadata.create_all(engine)
@@ -59,6 +74,8 @@ def test_nullable_fields(clear_sqlmodel, caplog):
     assert "primary_key INTEGER NOT NULL," in create_table_log
     assert "required_value VARCHAR NOT NULL," in create_table_log
     assert "optional_default_ellipsis VARCHAR NOT NULL," in create_table_log
+    assert "optional_no_field VARCHAR," in create_table_log
+    assert "optional_no_field_default VARCHAR NOT NULL," in create_table_log
     assert "optional_default_none VARCHAR," in create_table_log
     assert "optional_non_nullable VARCHAR NOT NULL," in create_table_log
     assert "optional_nullable VARCHAR," in create_table_log
@@ -77,6 +94,11 @@ def test_nullable_fields(clear_sqlmodel, caplog):
     assert "str_default_str_nullable VARCHAR," in create_table_log
     assert "str_default_ellipsis_non_nullable VARCHAR NOT NULL," in create_table_log
     assert "str_default_ellipsis_nullable VARCHAR," in create_table_log
+    assert "base_url VARCHAR NOT NULL," in create_table_log
+    assert "optional_url VARCHAR(512), " in create_table_log
+    assert "url VARCHAR(512) NOT NULL," in create_table_log
+    assert "annotated_url VARCHAR(512) NOT NULL," in create_table_log
+    assert "annotated_optional_url VARCHAR(512)," in create_table_log
 
 
 # Test for regression in https://github.com/tiangolo/sqlmodel/issues/420
